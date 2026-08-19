@@ -25,6 +25,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { TIER_LABEL, type TierId } from "@/config/brand";
+import { GANGWON_REGION_LABEL, type GangwonRegionId } from "@/config/regions";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
   component: AdminApplicationsPage,
@@ -35,6 +36,7 @@ type Application = {
   name: string;
   email: string;
   tier: TierId;
+  region: GangwonRegionId | null;
   status: string;
   created_at: string;
 };
@@ -50,7 +52,7 @@ function AdminApplicationsPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("applications")
-        .select("id,name,email,tier,status,created_at")
+        .select("id,name,email,tier,region,status,created_at")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as Application[];
@@ -148,6 +150,7 @@ function AdminApplicationsPage() {
                   <th className="px-3 py-2 text-left">번호</th>
                   <th className="px-3 py-2 text-left">이름</th>
                   <th className="px-3 py-2 text-left">이메일</th>
+                  <th className="px-3 py-2 text-left">지역</th>
                   <th className="px-3 py-2 text-left">등급</th>
                   <th className="px-3 py-2 text-left">신청일</th>
                   <th className="px-3 py-2 text-left">상태</th>
@@ -160,6 +163,9 @@ function AdminApplicationsPage() {
                     <td className="px-3 py-2 text-muted-foreground">{i + 1}</td>
                     <td className="px-3 py-2 font-medium">{r.name}</td>
                     <td className="px-3 py-2 text-muted-foreground">{r.email}</td>
+                    <td className="px-3 py-2 text-muted-foreground">
+                      {r.region ? GANGWON_REGION_LABEL[r.region] : "-"}
+                    </td>
                     <td className="px-3 py-2">
                       <Select
                         value={r.tier}

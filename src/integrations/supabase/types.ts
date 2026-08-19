@@ -35,6 +35,7 @@ export type Database = {
           email: string
           id: string
           name: string
+          region: string | null
           status: string
           tier: string
         }
@@ -43,6 +44,7 @@ export type Database = {
           email: string
           id?: string
           name: string
+          region?: string | null
           status?: string
           tier: string
         }
@@ -51,6 +53,7 @@ export type Database = {
           email?: string
           id?: string
           name?: string
+          region?: string | null
           status?: string
           tier?: string
         }

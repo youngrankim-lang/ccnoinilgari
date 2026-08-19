@@ -1,14 +1,22 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Heart, Loader2 } from "lucide-react";
+import { Heart, Loader2, TrendingUp } from "lucide-react";
 
 import { BRAND, TIERS, type TierId } from "@/config/brand";
+import { GANGWON_REGIONS, type GangwonRegionId } from "@/config/regions";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
@@ -19,19 +27,23 @@ const schema = z.object({
   name: z.string().trim().min(1, "이름을 입력해 주세요.").max(80),
   email: z.string().trim().email("올바른 이메일 주소를 입력해 주세요.").max(200),
   tier: z.enum(["general", "regular", "lifetime"]),
+  region: z.enum(GANGWON_REGIONS.map((r) => r.id) as [GangwonRegionId, ...GangwonRegionId[]], {
+    message: "거주 지역(시·군)을 선택해 주세요.",
+  }),
 });
 
 function ApplyPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [tier, setTier] = useState<TierId>("general");
+  const [region, setRegion] = useState<GangwonRegionId | "">("");
   const [submitting, setSubmitting] = useState(false);
-  const [errors, setErrors] = useState<{ name?: string; email?: string }>({});
+  const [errors, setErrors] = useState<{ name?: string; email?: string; region?: string }>({});
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setErrors({});
-    const parsed = schema.safeParse({ name, email, tier });
+    const parsed = schema.safeParse({ name, email, tier, region: region || undefined });
     if (!parsed.success) {
       const fe: typeof errors = {};
       for (const issue of parsed.error.issues) {
@@ -46,6 +58,7 @@ function ApplyPage() {
       name: parsed.data.name,
       email: parsed.data.email,
       tier: parsed.data.tier,
+      region: parsed.data.region,
     });
     setSubmitting(false);
     if (error) {
@@ -57,6 +70,7 @@ function ApplyPage() {
     setName("");
     setEmail("");
     setTier("general");
+    setRegion("");
   }
 
   return (
@@ -113,6 +127,30 @@ function ApplyPage() {
             </div>
 
             <div>
+              <Label htmlFor="region" className="mb-2 block">
+                거주 지역 (강원특별자치도) <span className="text-destructive">*</span>
+              </Label>
+              <Select
+                value={region}
+                onValueChange={(v) => setRegion(v as GangwonRegionId)}
+              >
+                <SelectTrigger id="region" className="w-full">
+                  <SelectValue placeholder="시·군을 선택해 주세요" />
+                </SelectTrigger>
+                <SelectContent>
+                  {GANGWON_REGIONS.map((r) => (
+                    <SelectItem key={r.id} value={r.id}>
+                      {r.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.region && (
+                <p className="mt-1 text-xs text-destructive">{errors.region}</p>
+              )}
+            </div>
+
+            <div>
               <Label className="mb-2 block">후원 등급 선택</Label>
               <div role="radiogroup" className="grid gap-3">
                 {TIERS.map((t) => {
@@ -165,6 +203,16 @@ function ApplyPage() {
             )}
           </Button>
         </form>
+
+        <div className="mt-6 text-center">
+          <Link
+            to="/trends"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+          >
+            <TrendingUp className="h-4 w-4" />
+            요즘 후원 트렌드 알아보기
+          </Link>
+        </div>
 
         <p className="mt-8 text-center text-xs text-muted-foreground">{BRAND.footer}</p>
       </div>
